@@ -2,13 +2,16 @@ package andy.memcache;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.poi.ss.formula.functions.T;
 
 import com.google.code.yanf4j.core.impl.StandardSocketOption;
 
@@ -88,21 +91,7 @@ public class XMemcacheUtil {
 		if (value == null)
 			return false;
 		if (client != null && !client.isShutdown()) {
-			/*
-			 * if (client.get(key) == null) { client.add(key, exp, value); }
-			 * else {
-			 */
-			/*
-			 * client.cas(key, new CASOperation<T>() {
-			 * 
-			 * @Override public int getMaxTries() { return 3; }
-			 * 
-			 * @Override public T getNewValue(long currentCAS, T currentValue) {
-			 * log.error(currentCAS + "\t" +
-			 * JSONObject.toJSONString(currentValue)); return value; } });
-			 */
 			return client.set(key, exp, value);
-			// }
 		}
 		return false;
 	}
@@ -118,6 +107,30 @@ public class XMemcacheUtil {
 			l.unlock();
 		}
 		return false;
+	}
+	
+	public static final <T> Map<String,T> get(String key,int...is) throws TimeoutException, InterruptedException, MemcachedException{
+		List<String> lists = new ArrayList<>();
+		for (int i : is) {
+			lists.add(key + i);
+		}
+		return get(lists);
+	}
+	
+	public static final <T> Map<String, T> get(int start, int end, String key) throws TimeoutException, InterruptedException, MemcachedException {
+		List<String> lists = new ArrayList<>();
+		for (int i = start; i < end; i++) {
+			lists.add(key + i);
+		}
+		return get(lists);
+	}
+	
+	public static final <T> Map<String,T> get(String...strings) throws TimeoutException, InterruptedException, MemcachedException{
+		return client.get(Arrays.asList(strings));
+	}
+	
+	public static final <T> Map<String, T> get(List<String> key) throws TimeoutException, InterruptedException, MemcachedException {
+		return client.get(key);
 	}
 
 	public static final <T> T get(String key) throws TimeoutException, InterruptedException, MemcachedException {
@@ -203,12 +216,6 @@ public class XMemcacheUtil {
 	public static final <T> boolean addList(String key, T t) throws TimeoutException, InterruptedException, MemcachedException {
 		return addT(t, key, true);
 	}
-
-	/*
-	 * public static final User get(String key, User user) throws Exception { if
-	 * (client != null && !client.isShutdown()) { return client.get(key + "_" +
-	 * user.hashCode()); } else { return null; } }
-	 */
 
 	public static final <T> boolean setList(String key, T t) throws TimeoutException, InterruptedException, MemcachedException {
 		return addT(t, key, false);
